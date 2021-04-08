@@ -1,0 +1,9 @@
+# line endings
+* text eol=lf
+
+# file encodings
+** zos-working-tree-encoding=ibm-1047 working-tree-encoding=utf-8 git-encoding=utf-8
+
+*.md  zos-working-tree-encoding=ISO8859-1 working-tree-encoding=utf-8 git-encoding=utf-8
+*.pw  zos-working-tree-encoding=ISO8859-1 working-tree-encoding=utf-8 git-encoding=utf-8
+*.bin zos-working-tree-encoding=ISO8859-1 working-tree-encoding=utf-8 git
