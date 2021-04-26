@@ -7,11 +7,11 @@ import groovy.transform.*
 @Field def yamlUtils = loadScript(new File("YamlUtilities.groovy"))
 def props = parseInput(args)
 //deployApplicationPackage (props.workDir, props.tarFile, new File(props.pdsMapping).text)
-deployApplicationPackage (props.workDir, props.tarFile )  
+deployApplicationPackage (props.workDir, props.tarFile, props.system, props.env )  
 
 
 //def deployApplicationPackage (String workDir, String tarFile, String pdsMapping) {
-def deployApplicationPackage (String workDir, String tarFile) {
+def deployApplicationPackage (String workDir, String tarFile, String system, String env) {
 	// Local variables
 	//def tempFolderName = "${workDir}/tempDeploy"
 	def tempFolderName = "tempDeploy"
@@ -53,8 +53,10 @@ def deployApplicationPackage (String workDir, String tarFile) {
 		println "** Processing deploy unit: ${unit.originPDS}, type ${unit.type}, deploy type ${unit.deployType}"
 		def suffix = unit.originPDS.replaceAll(/.*\.([^.]*)/, "\$1")
 		targetDataset = pdsMap[suffix]
+		targetDataset = targetDataset.replace('@{system}',appSystem).replace('@{environment}',deployEnv)
+		println "Target Dataset is ${targetDataset}"
 
-                //NJL:  Above logic could be expanded to us the deployType as the pdsMap lookup
+                //NJL:  Above logic could be expanded to use the deployType as the pdsMap lookup
                 // Future enhancement.  Leaving as-is
                 // Adding exception for newCo support of NCAL loadLib _ subMods
                 if (unit.deployType.endsWith("NCAL")) {
@@ -91,6 +93,8 @@ def parseInput(String[] cliArgs)
 	cli.h(longOpt:'help', 'Prints this message')
 	cli.w(longOpt:'workDir', args:1, required:true, 'Absolute path to the working directory')
 	cli.t(longOpt:'tarFile', args:1, required:true, 'Absolute path to zar file')
+	cli.s(longOpt:'system', args:1, required:true, 'Application system three letter acronym')
+	cli.e(longOpt:'environment', args:1, required:true, 'Deployment environment')
 	//cli.m(longOpt:'pdsMapping', args:1, required:true, 'Absolute path to pds mapping file')
 	def opts = cli.parse(cliArgs)
 	
@@ -108,6 +112,8 @@ def parseInput(String[] cliArgs)
 	def props = new Properties()
 	props.workDir = opts.w
 	props.tarFile = opts.t
+	props.system  = opts.s
+	props.env     = opts.e
 	//props.pdsMapping = opts.m
 	return props
 }

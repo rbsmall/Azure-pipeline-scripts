@@ -1,5 +1,5 @@
 # IBM SAMPLE:  Target deploy properties for DVL (SAMPLE)
-## Put this in the apps repo under applicaiton-conf/folder 
+## Put this in the apps repo under applicaiton-conf/folder
 ---
 deploy:
   cics.cicsplex: DCICS????
@@ -11,5 +11,5 @@ deploy:
   bind.qualifier: GENADB0????
   bind.subsys: DBC1????
   pds.mapping: |-
-    *.LOAD,DVL.TEAM.LOADLIB
-    *.DBRM,DVL.TEAM.DBRM   
+    *.LOAD,NTS@{system}.TEST.IDZPILOT.X@{environment}.LOAD
+    *.DBRM,NTS@{system}.TEST.IDZPILOT.X@{environment}.DBRMLIB
