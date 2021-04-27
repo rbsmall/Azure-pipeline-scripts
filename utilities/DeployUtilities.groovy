@@ -11,7 +11,7 @@ deployApplicationPackage (props.workDir, props.tarFile, props.system, props.env 
 
 
 //def deployApplicationPackage (String workDir, String tarFile, String pdsMapping) {
-def deployApplicationPackage (String workDir, String tarFile, String system, String env) {
+def deployApplicationPackage (String workDir, String tarFile, String appSystem, String deployEnv) {
 	// Local variables
 	//def tempFolderName = "${workDir}/tempDeploy"
 	def tempFolderName = "tempDeploy"
