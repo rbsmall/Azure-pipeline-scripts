@@ -6,7 +6,7 @@ WorkDir=$1 ; cd $WorkDir
 WorkSpace=$2
 App=$3
 BuildMode="$4 $5" #DBB Build modes:  --impactBuild,  --reset, --fullBuild, '--fullbuild --scanOnly'
-zAppBuild=$HOME/dbb-zappbuild/build.groovy
+zAppBuild=$HOME/dbb-zappbuild-for-azure/build.groovy
 
 echo "**************************************************************"
 echo "**     Started:  DBB Build on HOST/USER: $(uname -Ia)/$USER"

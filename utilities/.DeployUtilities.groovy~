@@ -95,35 +95,74 @@ def deployApplicationPackage (String workDir, String tarFile, String appSystem, 
 	return "${tempFolderName}/app.yaml"
 }
 
-// Create and process the Bind command
+//Parsing the command line
+def parseInput(String[] cliArgs)
+{
+	def cli = new CliBuilder(usage: "DeployUtilities.groovy [options]", header: '', stopAtNonOption: false)
+	cli.h(longOpt:'help', 'Prints this message')
+	cli.w(longOpt:'workDir', args:1, required:true, 'Absolute path to the working directory')
+	cli.t(longOpt:'tarFile', args:1, required:true, 'Absolute path to zar file')
+	cli.s(longOpt:'system', args:1, required:true, 'Application system three letter acronym')
+	cli.e(longOpt:'environment', args:1, required:true, 'Deployment environment')
+	cli.l(longOpt:'bindLocation', args:1, required:true, 'DB2 Subsystem')
+	cli.c(longOpt:'bindCollection', args:1, required:true, 'DB2 Collection')
+	cli.o(longOpt:'bindOwner', args:1, required:true, 'Bind Owner ID')
+	cli.q(longOpt:'bindQualifier', args:1, required:true, 'Bind Qualifier')
+	//cli.m(longOpt:'pdsMapping', args:1, required:true, 'Absolute path to pds mapping file')
+	def opts = cli.parse(cliArgs)
+	
+	// if opt parse fail exit.
+	if (! opts) {
+		System.exit(1)
+	}
+	
+	if (opts.h)
+	{
+		cli.usage()
+		System.exit(0)
+	}
+	
+	def props = new Properties()
+	props.workDir        = opts.w
+	props.tarFile        = opts.t
+	props.system         = opts.s
+	props.env            = opts.e
+	props.bindLocation   = opts.l
+	props.bindCollection = opts.c
+	props.bindOwner      = opts.o
+	props.bindQualifier  = opts.q
+	//props.pdsMapping = opts.m
+	return props
+}
+
 def bindApplicationPackage(String memberName, String dbrmLib, String bindLocation, String bindCollection, String bindOwner, String bindQualifier) {
 	// Create JCLExec String
 	println "*** Beginning Bind process for ${memberName}"
 	
 	jcl = """\
-\n//JOBNAME JOB (ACCOUNT),'PROJDEF',CLASS=A,MSGCLASS=X
+\n//BSMALL0J JOB (ACCOUNT),'PROJDEF',CLASS=A,MSGCLASS=X
 //*
-//BIND EXEC  PGM=IKJEFT01
-//SYSTSPRT DD SYSOUT=*
-//SYSPRINT DD SYSOUT=*
-//SYSUDUMP DD SYSOUT=*
-//SYSTSIN  DD *
-   DSN SYSTEM(${bindLocation}) RETRY(5)
-	   BIND PACKAGE(${bindCollection}) -
-	   OWNER(${bindOwner})             -
-	   QUALIFIER(${bindQualifier})     -
-	   MEMBER(${memberName})           -
-	   LIBRARY('${dbrmLib}')           -
-	   ACTION(REPLACE)                 -
-	   EXPLAIN(YES)                    -
-	   VALIDATE(BIND)                  -
-	   ISOLATION(CS)                   -
-	   FLAG(I)                         -
-	   CURRENTDATA(NO)                 -
-	   DEGREE(1)                       -
-	   RELEASE(COMMIT)                 -
-	   ENABLE(*)                       -
-	   SQLERROR(NOPACKAGE)
+//BIND EXEC  PGM=IKJEFT01                      
+//SYSTSPRT DD SYSOUT=*                         
+//SYSPRINT DD SYSOUT=*                         
+//SYSUDUMP DD SYSOUT=*                         
+//SYSTSIN  DD *                                
+   DSN SYSTEM(${bindLocation}) RETRY(5)                   
+       BIND PACKAGE(${bindCollection}) -               
+       OWNER(${bindOwner})             -                    
+       QUALIFIER(${bindQualifier})     -                
+       MEMBER(${memberName})           -                     
+       LIBRARY('${dbrmLib}')           -           
+       ACTION(REPLACE)                 -          
+       EXPLAIN(YES)                    -          
+       VALIDATE(BIND)                  -          
+       ISOLATION(CS)                   -          
+       FLAG(I)                         -          
+       CURRENTDATA(NO)                 -          
+       DEGREE(1)                       -          
+       RELEASE(COMMIT)                 -          
+       ENABLE(*)                       -          
+       SQLERROR(NOPACKAGE)       
 //*
 """
 
@@ -170,45 +209,3 @@ def bindApplicationPackage(String memberName, String dbrmLib, String bindLocatio
 		println(errorMsg)
 	}
 }
-
-
-//Parsing the command line
-def parseInput(String[] cliArgs)
-{
-	def cli = new CliBuilder(usage: "DeployUtilities.groovy [options]", header: '', stopAtNonOption: false)
-	cli.h(longOpt:'help', 'Prints this message')
-	cli.w(longOpt:'workDir', args:1, required:true, 'Absolute path to the working directory')
-	cli.t(longOpt:'tarFile', args:1, required:true, 'Absolute path to zar file')
-	cli.s(longOpt:'system', args:1, required:true, 'Application system three letter acronym')
-	cli.e(longOpt:'environment', args:1, required:true, 'Deployment environment')
-	cli.l(longOpt:'bindLocation', args:1, required:true, 'DB2 Subsystem')
-	cli.c(longOpt:'bindCollection', args:1, required:true, 'DB2 Collection')
-	cli.o(longOpt:'bindOwner', args:1, required:true, 'Bind Owner ID')
-	cli.q(longOpt:'bindQualifier', args:1, required:true, 'Bind Qualifier')
-	//cli.m(longOpt:'pdsMapping', args:1, required:true, 'Absolute path to pds mapping file')
-	def opts = cli.parse(cliArgs)
-	
-	// if opt parse fail exit.
-	if (! opts) {
-		System.exit(1)
-	}
-	
-	if (opts.h)
-	{
-		cli.usage()
-		System.exit(0)
-	}
-	
-	def props = new Properties()
-	props.workDir        = opts.w
-	props.tarFile        = opts.t
-	props.system         = opts.s
-	props.env            = opts.e
-	props.bindLocation   = opts.l
-	props.bindCollection = opts.c
-	props.bindOwner      = opts.o
-	props.bindQualifier  = opts.q
-	//props.pdsMapping = opts.m
-	return props
-}
-

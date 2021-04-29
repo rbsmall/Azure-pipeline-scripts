@@ -15,6 +15,7 @@ import groovy.json.JsonSlurper
  */
 
 def properties = parseInput(args)
+println "Args - ${args}"
 def startTime = new Date()
 properties.startTime = startTime.format("yyyy-MM-dd'T'hh:mm:ss.mmm")
 def workDir = properties.workDir
@@ -61,7 +62,7 @@ for (record in parsedReport.records) {
 							"        buildScriptLocation:\n" +
 							"          <<:           *gitHubGenAppBuild\n\n"
 						
-						// Copy the member	
+						// Copy the member
 						datasetDir = new File("$tempLoadDir/$dataset")
 						datasetDir.mkdirs()
 					
@@ -147,7 +148,10 @@ assert rc == 0, "Failed to package application"
  */
 def parseInput(String[] cliArgs){
 	println("parse output")
+	println"cliArgs - ${cliArgs}"
  def cli = new CliBuilder(usage: "package.groovy [options]")
+// cli.v(longOpt:'version', args:1, argName:'int', 'Pipeline build number')
+// cli.p(longOpt:'application', args:1, argName:'app', 'Application name')
  cli.w(longOpt:'workDir', args:1, argName:'dir', 'Absolute path to the DBB build output directory')
  cli.s(longOpt:'gitSourceUrl', args:1, argName:'url','The git source repo url')
  cli.g(longOpt:'gitBuildUrl', args:1, argName:'url','The git groovy build repo url')
@@ -182,14 +186,22 @@ println "**TRACE**  $scriptDir/conf/build.properties"
  }
 
  // set command line arguments
+ println "opts s - ${opts.s}"
+ properties.version = cliArgs[7]
+ properties.name = cliArgs[5]
  if (opts.w) properties.workDir = opts.w
  if (opts.s) properties.gitSourceUrl = opts.s
+ 	else properties.gitSourceUrl = "gitSourceUrl-TBD"
  if (opts.g) properties.gitBuildUrl = opts.g
+ 	else properties.gitBuildUrl = "git@github.ibm.com:brice/a-dummy-repo.git"
  if (opts.x) properties.gitSourceBranch = opts.x else properties.gitSourceBranch = "master"
  if (opts.y) properties.gitBuildBranch = opts.y else properties.gitBuildBranch = "master"
  if (opts.b) properties.buildHash = opts.b
+ 	else properties.buildHash = "12345678"
  if (opts.a) properties.url = opts.a
+ 	else properties.url = "url"
  if (opts.n) properties.buildNumber = opts.n
+ 	else properties.buildNumber = "P092259"
 
  // validate required properties
  try {
@@ -205,4 +217,3 @@ println "**TRACE**  $scriptDir/conf/build.properties"
  }
  return properties
 }
-

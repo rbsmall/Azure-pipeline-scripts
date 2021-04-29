@@ -3,7 +3,7 @@
 
 . $HOME/.profile
 artifacts=$(ls -d $1/build*)
-package=$HOME/Azure-pipeline-scripts/package.groovy
+package=$HOME/Azure-pipeline-scripts/utilities/package.groovy
 
 echo "**************************************************************"
 echo "**     Started: Azure Packaging on HOST/USER: $(uname -Ia) $USER"
@@ -15,12 +15,12 @@ echo "**                      Package Script:" $package
  
 # Other args are for future use  
 groovyz $package\
-  -workDir      $1\
+  -workDir      $artifacts\
   -workSpace    $artifacts\
   -application  $2\
   -version      $3\
   -s gitSourceUrl-TBD\
-  -g git@github.ibm.com:Nelson-Lopez1/a-dummy-repo.git\
+  -g git@github.ibm.com:brice/a-dummy-repo.git\
   -x gitSourceBranch-TBD\
   -y gitBuildBranch-TBD\
   -b 12345678\
