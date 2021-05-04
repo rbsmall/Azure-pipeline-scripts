@@ -15,11 +15,11 @@ import groovy.json.JsonSlurper
  */
 
 def properties = parseInput(args)
-println "Args - ${args}"
 def startTime = new Date()
 properties.startTime = startTime.format("yyyy-MM-dd'T'hh:mm:ss.mmm")
-def workDir = properties.workDir
-def loadCount = 0
+def workDir          = properties.workDir
+def workSpace        = properties.workSpace
+def loadCount        = 0
 
 
 //Retrieve the build report and parse the outputs from the build report
@@ -87,10 +87,10 @@ def appYamlWriter = new File("$tempLoadDir/app.yaml")
 //Set up the artifactory information to publish the tar file
 def versionLabel = "${properties.startTime}"  as String
 
-def tarFile = new File("$workDir/${properties.name}-${properties.version}.tar")
+def tarFile = new File("$workSpace/${properties.name}-${properties.version}.tar")
 def remotePath = "${properties.version}/${properties.gitSourceBranch}/${properties.buildNumber}/${tarFile.name}"
 
-println "${properties.url}/$remotePath"
+//println "${properties.url}/$remotePath"
 
 
 appYamlWriter.withWriter("UTF-8") { writer ->
@@ -135,6 +135,9 @@ appYamlWriter.withWriter("UTF-8") { writer ->
 
 println "Number of load modules to publish: $loadCount"
 
+//Copy the application-conf/pdsMapping.yaml to the tempLoadDir
+new File("${tempLoadDir}/pdsMapping.yaml") << new File("${properties.workSpace}/${properties.project}/${properties.application}/application-conf/pdsMapping.yaml").text
+
 //Package the load files just copied into a tar file using the build
 //label as the name for the tar file.
 def process = "tar -cvf $tarFile .".execute(null, tempLoadDir)
@@ -147,12 +150,14 @@ assert rc == 0, "Failed to package application"
  *
  */
 def parseInput(String[] cliArgs){
-	println("parse output")
-	println"cliArgs - ${cliArgs}"
  def cli = new CliBuilder(usage: "package.groovy [options]")
 // cli.v(longOpt:'version', args:1, argName:'int', 'Pipeline build number')
 // cli.p(longOpt:'application', args:1, argName:'app', 'Application name')
  cli.w(longOpt:'workDir', args:1, argName:'dir', 'Absolute path to the DBB build output directory')
+ cli.k(longOpt:'workSpace', args:1, argName:'dir', 'Absolute path to the DBB build workspace directory')
+ cli.v(longOpt:'version', args:1, argName:'int', 'Build version number')
+ cli.p(longOpt:'application', args:1, argName:'txt', 'Application name')
+ cli.j(longOpt:'project', args:1, argName:'txt', 'Azure Project name')
  cli.s(longOpt:'gitSourceUrl', args:1, argName:'url','The git source repo url')
  cli.g(longOpt:'gitBuildUrl', args:1, argName:'url','The git groovy build repo url')
  cli.x(longOpt:'gitSourceBranch', args:1, argName:'url','The git source repo branch')
@@ -171,9 +176,9 @@ def parseInput(String[] cliArgs){
 
  // load workDir from ./build.properties if it exists
  def buildProperties = new Properties()
- def scriptDir = new File(getClass().protectionDomain.codeSource.location.path).parent
- def buildPropFile = new File("$scriptDir/conf/build.properties")
-println "**TRACE**  $scriptDir/conf/build.properties"
+ def scriptDir       = new File(getClass().protectionDomain.codeSource.location.path).parent
+ def buildPropFile   = new File("$scriptDir/conf/build.properties")
+//println "**TRACE**  $scriptDir/conf/build.properties"
 
 
  if (buildPropFile.exists()){
@@ -186,26 +191,34 @@ println "**TRACE**  $scriptDir/conf/build.properties"
  }
 
  // set command line arguments
- println "opts s - ${opts.s}"
  properties.version = cliArgs[7]
  properties.name = cliArgs[5]
- if (opts.w) properties.workDir = opts.w
- if (opts.s) properties.gitSourceUrl = opts.s
- 	else properties.gitSourceUrl = "gitSourceUrl-TBD"
- if (opts.g) properties.gitBuildUrl = opts.g
- 	else properties.gitBuildUrl = "git@github.ibm.com:brice/a-dummy-repo.git"
- if (opts.x) properties.gitSourceBranch = opts.x else properties.gitSourceBranch = "master"
- if (opts.y) properties.gitBuildBranch = opts.y else properties.gitBuildBranch = "master"
- if (opts.b) properties.buildHash = opts.b
- 	else properties.buildHash = "12345678"
- if (opts.a) properties.url = opts.a
- 	else properties.url = "url"
- if (opts.n) properties.buildNumber = opts.n
- 	else properties.buildNumber = "P092259"
+ if (opts.w) properties.workDir         = opts.w
+ if (opts.k) properties.workSpace       = opts.k
+ if (opts.v) properties.version         = opts.v
+ if (opts.p) properties.application     = opts.p
+ if (opts.j) properties.project         = opts.j
+ if (opts.s) properties.gitSourceUrl    = opts.s
+ 	else properties.gitSourceUrl        = "gitSourceUrl-TBD"
+ if (opts.g) properties.gitBuildUrl     = opts.g
+ 	else properties.gitBuildUrl         = "git@github.ibm.com:brice/a-dummy-repo.git"
+ if (opts.x) properties.gitSourceBranch = opts.x 
+ 	else properties.gitSourceBranch     = "master"
+ if (opts.y) properties.gitBuildBranch  = opts.y 
+ 	else properties.gitBuildBranch      = "master"
+ if (opts.b) properties.buildHash       = opts.b
+ 	else properties.buildHash           = "12345678"
+ if (opts.a) properties.url             = opts.a
+ 	else properties.url                 = "url"
+ if (opts.n) properties.buildNumber     = opts.n
+ 	else properties.buildNumber         = "P092259"
 
  // validate required properties
  try {
 	 assert properties.workDir: "Missing property build output directory"
+	 assert properties.workSpace: "Missing property build workspace directory"
+//	 assert properties.version: "Missing property version number"
+	 assert properties.application: "Missing property application name"
 	 assert properties.gitSourceUrl : "Missing gitSourceUrl arg"
 	 assert properties.gitBuildUrl : "Missing gitBuildUrl arg"
 	 assert properties.buildHash : "Missing buildHash arg"

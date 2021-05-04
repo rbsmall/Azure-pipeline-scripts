@@ -4,7 +4,8 @@
 . $HOME/.profile
 
 WorkDir=$1 ; cd $WorkDir
-tar=~/$WorkDir/$2.tar
+#tar=~/$WorkDir/$2.tar
+tar=$(ls -p ~/$WorkDir/*.tar | grep -v /$)
 applicationSystem=$3
 deployEnv=$4
 location=$5

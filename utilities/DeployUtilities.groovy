@@ -6,8 +6,17 @@ import groovy.transform.*
 // define script properties
 @Field def yamlUtils = loadScript(new File("YamlUtilities.groovy"))
 def props = parseInput(args)
+bindError = false
 //deployApplicationPackage (props.workDir, props.tarFile, new File(props.pdsMapping).text)
-deployApplicationPackage (props.workDir, props.tarFile, props.system, props.env, props.bindLocation, props.bindCollection, props.bindOwner, props.bindQualifier )  
+deployApplicationPackage (props.workDir, props.tarFile, props.system, props.env, props.bindLocation, props.bindCollection, props.bindOwner, props.bindQualifier )
+
+// if bind error occurred signal process error
+if (bindError) {
+	println "*** Exiting due to bind errors"
+	System.exit(1)
+}
+	
+// Script End	
 
 
 //def deployApplicationPackage (String workDir, String tarFile, String pdsMapping) {
@@ -33,7 +42,6 @@ def deployApplicationPackage (String workDir, String tarFile, String appSystem, 
 	println "** Parse the application definition file"
 	def scriptDir = getClass().protectionDomain.codeSource.location.path
 	def dir = new File('.').absolutePath
-	println "Script dir - ${dir}"
 	
 	def pdsMapping = new File("$tempFolderName/pdsMapping.yaml").text 
 	pdsMap = [:]
@@ -42,8 +50,6 @@ def deployApplicationPackage (String workDir, String tarFile, String appSystem, 
 		pdsValue = line.replaceAll(/.*,(.*)/, "\$1").trim()
 		pdsMap.put(pdsKey, pdsValue)
 	}
-
-	println "** Dataset Mapping $pdsMap"
 
 	def srcOptions = "cyl space(1,15) lrecl(80) dsorg(PO) recfm(F,B) dsntype(library) msg(1)"
 	def loadOptions = "cyl space(1,15) dsorg(PO) recfm(U) blksize(32760) dsntype(library) msg(1)"
@@ -160,12 +166,14 @@ def bindApplicationPackage(String memberName, String dbrmLib, String bindLocatio
 			println   "***  Bind Job ${bindJCL.submittedJobId} completed with $rc "
 			// Store Report in Workspace
 		} else { 
+			bindError = true
 			String errorMsg = "*! The Bind Job ${bindJCL.submittedJobId} failed with RC=($rc) for ${memberName} "
 			println(errorMsg)
 		}
 	}
 	else {
 		// We don't see the CC, assume an exception
+		bindError = true
 		String errorMsg = "*!  Bind Job ${bindJCL.submittedJobId} failed with ${bindJCL.maxRC}"
 		println(errorMsg)
 	}
